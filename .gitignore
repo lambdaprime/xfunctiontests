@@ -1,0 +1,8 @@
+**/bin/
+**/build/
+**/.gradle/
+**/.settings/
+**/bld/
+**/.project
+**/.classpath
+/**/release/*-SNAPSHOT.jar
