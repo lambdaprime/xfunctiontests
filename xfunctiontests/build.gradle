@@ -1,59 +1,60 @@
 // include xfunction for updateVersion
 buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "io.github.lambdaprime:id.xfunction:14.0"
-    }
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath "io.github.lambdaprime:id.xfunction:14.0"
+  }
 }
 
 plugins {
-    id 'com.diffplug.spotless'
-}
-
-dependencies {
-    implementation 'io.github.lambdaprime:id.xfunction:19.0'
-    implementation 'org.opentest4j:opentest4j:1.2.0'
-
-    apiElements 'io.github.lambdaprime:id.xfunction:19.0'
-    apiElements 'org.opentest4j:opentest4j:1.2.0'
+  id 'com.diffplug.spotless'
 }
 
 apply plugin : 'eclipse'
 
 eclipse.classpath.file {
-    // instruct eclipse plugin to put everything to module path
-    whenMerged {
-        entries.findAll { it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-    }
+  // instruct eclipse plugin to put everything to module path
+  whenMerged {
+    entries.findAll { it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+  }
+}
+
+dependencies {
+  addDependencies(this, ["implementation", "apiElements"], "20.0", [
+    "io.github.lambdaprime:id.xfunction"
+  ]);
+  addDependencies(this, ["implementation", "apiElements"], "1.2.0", [
+    "org.opentest4j:opentest4j"
+  ]);
 }
 
 javadoc {
-    options.noTimestamp = true;
-    options.noQualifiers = ["all"];
-    options.noTree = true;
-    options.noIndex = true;
-    options.noNavBar = true;
-    options.overview = "src/overview.html";
-    // ignore missing @return, @param etc
-    options.addBooleanOption('Xdoclint:all,-missing', true)
+  options.noTimestamp = true;
+  options.noQualifiers = ["all"];
+  options.noTree = true;
+  options.noIndex = true;
+  options.noNavBar = true;
+  options.overview = "src/overview.html";
+  // ignore missing @return, @param etc
+  options.addBooleanOption('Xdoclint:all,-missing', true)
 }
 
 jar {
-    manifest { 
-        attributes 'Implementation-Version': "${rootProject.version}"
-    }
+  manifest { 
+    attributes 'Implementation-Version': "${rootProject.version}"
+  }
 }
 
 task createRelease(type: Copy) {
-    def out = 'release'
-    from jar.archiveFile
-    into out
+  def out = 'release'
+  from jar.archiveFile
+  into out
 }
 
 task cleanRelease(type: Delete) {
-    delete "$projectDir/release"
+  delete "$projectDir/release"
 }
 
 assemble.dependsOn createRelease
@@ -67,14 +68,13 @@ if (project.hasProperty('publish')) {
 
   // update version only during publishing
   task updateVersion() {
-      def version = rootProject.version;
-      if (version.contains("SNAPSHOT")) return;
-      println "Updating version to " + version
-      new id.xfunction.text.Substitutor()
-          .withRegexpSupport()
-          .substitute(java.nio.file.Paths.get("${project.rootDir}/README.md"), Map.of(
-              "io.github.lambdaprime:id.xfunctiontests:[0-9.]+", "io.github.lambdaprime:id.xfunctiontests:" + version
-          ));
+    if (version.contains("SNAPSHOT")) return;
+    println "Updating version to " + version
+    new id.xfunction.text.Substitutor()
+      .withRegexpSupport()
+      .substitute(java.nio.file.Paths.get("${project.rootDir}/README.md"), Map.of(
+        "io.github.lambdaprime:id.xfunctiontests:[0-9.]+", "io.github.lambdaprime:id.xfunctiontests:" + version
+      ));
   }
   createRelease.dependsOn updateVersion
 
@@ -96,7 +96,7 @@ if (project.hasProperty('publish')) {
     withJavadocJar()
     withSourcesJar()
   }
-  
+
   apply plugin: 'maven-publish'
 
   publishing {
@@ -123,7 +123,7 @@ if (project.hasProperty('publish')) {
               email = 'intid@protonmail.com'
             }
           }
-          
+
           scm {
             url = 'https://github.com/lambdaprime/xfunctiontests.git'
           }

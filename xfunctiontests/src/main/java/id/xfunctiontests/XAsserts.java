@@ -69,7 +69,7 @@ public class XAsserts {
     }
 
     /**
-     * Asserts that two files or two folders are equal. Folders are compared recursively.
+     * Assert that two files or two folders are equal. Folders are compared recursively.
      *
      * @throws IOException
      */
@@ -104,6 +104,47 @@ public class XAsserts {
                     String.format("Not equals: %s != %s", expectedSource, actualSource),
                     expectedSource,
                     actualSource);
+        }
+    }
+
+    /**
+     * Assert that similarity between two values is less than delta. Similarity computed as
+     * abs(expected - actual).
+     */
+    public static void assertSimilar(double expected, double actual, double delta)
+            throws AssertionError {
+        var diff = Math.abs(expected - actual);
+        if (diff > delta)
+            throw new AssertionFailedError(
+                    String.format(
+                            "delta %s exceeds allowed %s (expected value <%s>, actual <%s>)",
+                            diff, delta, expected, actual),
+                    expected,
+                    actual);
+    }
+
+    /**
+     * Assert that similarity between each pair of values between two arrays is less than delta.
+     * Similarity computed as abs(expected[i] - actual[i]).
+     */
+    public static void assertSimilar(double[] expected, double[] actual, double delta) {
+        if (expected.length != actual.length)
+            throw new AssertionFailedError(
+                    String.format(
+                            "Array length is different: expected <%s>, actual <%s>",
+                            expected.length, actual.length),
+                    expected.length,
+                    actual.length);
+        for (int i = 0; i < actual.length; i++) {
+            var diff = Math.abs(expected[i] - actual[i]);
+            if (diff > delta)
+                throw new AssertionFailedError(
+                        String.format(
+                                "delta %s exceeds allowed %s for item %s (expected value <%s>,"
+                                        + " actual <%s>)",
+                                diff, delta, i, expected, actual),
+                        expected,
+                        actual);
         }
     }
 

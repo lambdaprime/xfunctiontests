@@ -112,7 +112,7 @@ public class AssertRunCommand {
 
     /** Run the command and perform the test */
     public void run(Consumer<XProcess> procConsumer) {
-        XProcess proc = exec.run();
+        XProcess proc = exec.start();
         if (isPrintCommandCall) {
             System.out.println(
                     "Executing command with following parameters: "
