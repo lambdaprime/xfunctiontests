@@ -19,17 +19,17 @@ package id.xfunctiontests;
 
 import static java.util.stream.Collectors.joining;
 
-import id.xfunction.Preconditions;
 import id.xfunction.ResourceUtils;
 import id.xfunction.lang.XExec;
 import id.xfunction.lang.XProcess;
-import id.xfunction.text.WildcardMatcher;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.opentest4j.AssertionFailedError;
 
 /**
  * Assert execution of an external command.
@@ -128,16 +128,24 @@ public class AssertRunCommand {
         consumer.ifPresent(c -> c.accept(actualOutput));
         expectedCode.ifPresent(
                 expectedCode -> {
-                    Preconditions.equals(
-                            expectedCode.intValue(), actualCode, "Unexpected return code");
+                    if (expectedCode != actualCode)
+                        throw new AssertionFailedError(
+                                String.format(
+                                        "expected return code <%s>, actual code <%s>",
+                                        expectedCode, actualCode),
+                                expectedCode,
+                                actualCode);
                 });
         expectedOutput.ifPresent(
                 expectedOutput -> {
-                    if (!isWildcardMatching) Preconditions.equals(expectedOutput, actualOutput);
-                    else
-                        Preconditions.isTrue(
-                                new WildcardMatcher(expectedOutput).matches(actualOutput),
-                                "Actual output <" + actualOutput + "> does not match expected");
+                    if (!isWildcardMatching && !Objects.equals(expectedOutput, actualOutput))
+                        throw new AssertionFailedError(
+                                String.format(
+                                        "expected output <%s>, actual output <%s>",
+                                        expectedOutput, actualOutput),
+                                expectedOutput,
+                                actualOutput);
+                    else XAsserts.assertMatches(expectedOutput, actualOutput);
                 });
     }
 }

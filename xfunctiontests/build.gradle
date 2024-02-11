@@ -4,12 +4,14 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "io.github.lambdaprime:id.xfunction:14.0"
+    classpath "io.github.lambdaprime:id.xfunction:23.0"
   }
 }
 
 plugins {
   id 'com.diffplug.spotless'
+  // only if you build Java library
+  id 'java-library'
 }
 
 apply plugin : 'eclipse'
@@ -22,23 +24,12 @@ eclipse.classpath.file {
 }
 
 dependencies {
-  addDependencies(this, ["implementation", "apiElements"], "20.0", [
-    "io.github.lambdaprime:id.xfunction"
-  ]);
-  addDependencies(this, ["implementation", "apiElements"], "1.2.0", [
-    "org.opentest4j:opentest4j"
-  ]);
+  api "io.github.lambdaprime:id.xfunction:23.0"
+  api "org.opentest4j:opentest4j:1.2.0"
 }
 
-javadoc {
-  options.noTimestamp = true;
-  options.noQualifiers = ["all"];
-  options.noTree = true;
-  options.noIndex = true;
-  options.noNavBar = true;
-  options.overview = "src/overview.html";
-  // ignore missing @return, @param etc
-  options.addBooleanOption('Xdoclint:all,-missing', true)
+configurations {
+  customConfig.extendsFrom implementation
 }
 
 jar {
@@ -47,43 +38,73 @@ jar {
   }
 }
 
-task createRelease(type: Copy) {
-  def out = 'release'
+javadoc {
+  options.noTimestamp = true
+  options.noQualifiers = ["all"]
+  options.noTree = true
+  options.noIndex = true
+  options.noNavBar = true
+  // ignore missing @return, @param etc
+  options.addBooleanOption('Xdoclint:all,-missing', true)
+  options.addStringOption('-show-packages', 'exported')
+}
+
+def packageDir = "$buildDir/package/${projectName}"
+
+ext.artifacts = fileTree(include: ['*'], dir: "$packageDir/libs")
+
+task createRelease(type: Zip) {
+  archiveFileName = "$releaseFileName"
+  destinationDirectory = file("$projectDir/release")
+  from file("$packageDir/..")
+}
+
+task copyLibs(type: Copy) {
+  from configurations.customConfig 
   from jar.archiveFile
-  into out
+  into "${packageDir}/libs"
+}
+
+task createPackage(type: Copy, dependsOn: [copyLibs]) {
+  from "${project.rootDir}/README.md"
+  from "${project.rootDir}/LICENSE-2.0.txt"
+  from file("$projectDir/src/dope4j-app")
+  into packageDir
 }
 
 task cleanRelease(type: Delete) {
-  delete "$projectDir/release"
+  delete "$packageDir"
+  delete "$projectDir/release/*-SNAPSHOT.zip"
 }
 
+createRelease.dependsOn createPackage
 assemble.dependsOn createRelease
-createRelease.dependsOn javadoc
 clean.dependsOn cleanRelease
 
 // run spotless and format code before the build
 classes.dependsOn spotlessApply
 
-if (project.hasProperty('publish')) {
+task updateVersion() {
+  // update version only when it is specified and non SNAPSHOT version is built
+  // 'unspecified' is the default value for the version in Gradle if it is not set
+  if (!version || version == "unspecified" || version.contains("SNAPSHOT")) return;
+  println "Updating version to " + version
+  new id.xfunction.text.Substitutor()
+    .withRegexpSupport()
+    .substitute(java.nio.file.Paths.get("${project.rootDir}/README.md"), Map.of(
+      "io.github.lambdaprime:id.xfunctiontests:[0-9.]+", "io.github.lambdaprime:id.xfunctiontests:" + version
+    ));
+}
+createRelease.dependsOn updateVersion
 
-  // update version only during publishing
-  task updateVersion() {
-    if (version.contains("SNAPSHOT")) return;
-    println "Updating version to " + version
-    new id.xfunction.text.Substitutor()
-      .withRegexpSupport()
-      .substitute(java.nio.file.Paths.get("${project.rootDir}/README.md"), Map.of(
-        "io.github.lambdaprime:id.xfunctiontests:[0-9.]+", "io.github.lambdaprime:id.xfunctiontests:" + version
-      ));
-  }
-  createRelease.dependsOn updateVersion
+if (project.hasProperty('publish')) {
 
   // Initially it was taken from https://central.sonatype.org/publish/publish-gradle/
   // but since Gradle removed this plugin https://docs.gradle.org/7.0/userguide/upgrading_version_6.html#removal_of_the_legacy_maven_plugin
   // it was rewritten for new one
 
   task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from "README-javadoc.txt"
   }
 

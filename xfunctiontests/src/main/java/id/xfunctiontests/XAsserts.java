@@ -101,7 +101,8 @@ public class XAsserts {
                     "Expected path is a folder but actual path is not " + actualSource);
         } else {
             throw new AssertionFailedError(
-                    String.format("Not equals: %s != %s", expectedSource, actualSource),
+                    String.format(
+                            "File content not equals: %s != %s", expectedSource, actualSource),
                     expectedSource,
                     actualSource);
         }

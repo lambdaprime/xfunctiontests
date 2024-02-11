@@ -10,6 +10,6 @@ It integrates with [opentest4j](https://github.com/ota4j-team/opentest4j). This 
 
 Java 11+
 
-# Contributors
+# Contacts
 
 lambdaprime <intid@protonmail.com>
