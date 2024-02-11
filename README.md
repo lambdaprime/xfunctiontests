@@ -10,6 +10,26 @@ It integrates with [opentest4j](https://github.com/ota4j-team/opentest4j). This 
 
 Java 11+
 
+# Download
+
+[Release versions](xfunctiontests/release/CHANGELOG.md)
+
+Or you can add dependency to it as follows:
+
+Gradle:
+
+```
+dependencies {
+  implementation 'io.github.lambdaprime:id.xfunctiontests:1.0'
+}
+```
+
+# Documentation
+
+[Documentation](http://portal2.atwebpages.com/xfunctiontests)
+
+[Development](DEVELOPMENT.md)
+
 # Contacts
 
 lambdaprime <intid@protonmail.com>

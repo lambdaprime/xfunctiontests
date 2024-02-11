@@ -1,0 +1,4 @@
+// list of subprojects to publish to Sonatype repo
+
+include 'xfunctiontests'
+project(':xfunctiontests').projectDir = new File(rootDir, '../xfunctiontests')
